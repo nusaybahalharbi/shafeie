@@ -4,7 +4,8 @@ const SUGGESTIONS_AR = [
   { label: "آيات عن الرزق", q: "آيات قرآنية عن الرزق" },
   { label: "الصبر على البلاء", q: "آيات عن الصبر عند المصائب" },
   { label: "تفسير آية الكرسي", q: "تفسير سورة البقرة آية 255" },
-  { label: "الشكر والحمد", q: "آيات قرآنية عن شكر الله" },
+  { label: "أذكار الصباح", q: "اعرض أذكار الصباح" },
+  { label: "أذكار المساء", q: "اعرض أذكار المساء" },
   { label: "التوكل على الله", q: "آيات عن التوكل على الله" },
 ];
 
@@ -12,7 +13,8 @@ const SUGGESTIONS_EN = [
   { label: "Verses about rizq", q: "Quran verses about provision and rizq" },
   { label: "Patience in hardship", q: "Verses about patience during hardship" },
   { label: "Ayat al-Kursi tafsir", q: "Give me the tafsir of Surah Al-Baqarah ayah 255" },
-  { label: "Gratitude", q: "Quran verses about gratitude and thankfulness" },
+  { label: "Morning Adhkar", q: "Show me the morning adhkar" },
+  { label: "Evening Adhkar", q: "Show me the evening adhkar" },
   { label: "Trust in Allah", q: "Verses about tawakkul and trusting in Allah" },
 ];
 
@@ -24,7 +26,7 @@ export default function EmptyState({ onSend, lang }: { onSend: (q: string) => vo
       <h2 className="mb-2 font-arabic text-[30px] text-nur-gold">بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ</h2>
       <p className="mb-2 font-display text-2xl text-nur-gold/80">شفيع</p>
       <p className="mb-4 font-body text-base text-nur-text-muted">
-        {lang === "ar" ? "اسأل عن أي آية، موضوع، أو اطلب إرشاداً قرآنياً" : "Ask about any verse, topic, or seek Quranic guidance"}
+        {lang === "ar" ? "اسأل عن أي آية، موضوع، أذكار، أو اطلب إرشاداً قرآنياً" : "Ask about any verse, topic, adhkar, or seek Quranic guidance"}
       </p>
       <p className="mb-10 font-body text-sm text-nur-text-faint">
         {lang === "ar" ? "كل إجابة موثقة ومسندة" : "Every answer is verified and sourced"}

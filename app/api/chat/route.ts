@@ -1,12 +1,64 @@
 import { GoogleGenAI } from "@google/genai";
 import { SYSTEM_PROMPT } from "@/lib/system-prompt";
 import quranData from "@/public/data/quran.json";
+import adhkarData from "@/public/data/adhkar.json";
 
 export const maxDuration = 60;
 
 interface Verse { id: number; text: string; translation: string; }
 interface Surah { id: number; name: string; transliteration: string; translation: string; type: string; total_verses: number; verses: Verse[]; }
+interface Dhikr { id: number; text: string; repetition: string; time: string; }
+
 const quran: Surah[] = quranData as Surah[];
+const adhkar: Dhikr[] = (adhkarData as any).adhkar as Dhikr[];
+const adhkarSource = (adhkarData as any).source as string;
+
+// --- Adhkar detection ---
+
+const ADHKAR_KEYWORDS = [
+  "أذكار", "الأذكار", "اذكار", "الاذكار",
+  "أذكار الصباح", "اذكار الصباح", "أذكار المساء", "اذكار المساء",
+  "أذكار الصباح والمساء", "اذكار الصباح والمساء",
+  "adhkar", "morning adhkar", "evening adhkar",
+  "morning remembrance", "evening remembrance",
+  "azkar", "morning azkar", "evening azkar",
+];
+
+function isAdhkarRequest(q: string): false | "morning" | "evening" | "both" {
+  const ql = q.toLowerCase();
+  const hasAdhkar = ADHKAR_KEYWORDS.some(k => ql.includes(k));
+  if (!hasAdhkar) return false;
+
+  const hasMorning = ql.includes("صباح") || ql.includes("morning");
+  const hasEvening = ql.includes("مساء") || ql.includes("evening");
+
+  if (hasMorning && !hasEvening) return "morning";
+  if (hasEvening && !hasMorning) return "evening";
+  return "both";
+}
+
+function getAdhkarContext(type: "morning" | "evening" | "both"): string {
+  let filtered: Dhikr[];
+
+  if (type === "morning") {
+    filtered = adhkar.filter(d => d.time === "صباح" || d.time === "صباح ومساء");
+  } else if (type === "evening") {
+    filtered = adhkar.filter(d => d.time === "مساء" || d.time === "صباح ومساء");
+  } else {
+    filtered = adhkar;
+  }
+
+  const header = `[ADHKAR_CONTEXT — المصدر: ${adhkarSource}]\n`;
+  const typeLabel = type === "morning" ? "أذكار الصباح" : type === "evening" ? "أذكار المساء" : "أذكار الصباح والمساء";
+
+  const items = filtered.map((d, i) =>
+    `${i + 1}. الذكر: ${d.text}\nالتكرار: ${d.repetition}\nالوقت: ${d.time}`
+  ).join("\n\n");
+
+  return `${header}النوع: ${typeLabel}\n\n${items}`;
+}
+
+// --- Quran search ---
 
 function searchQuran(q: string): string {
   const ql = q.toLowerCase();
@@ -59,6 +111,8 @@ function fmt(s: Surah, v: Verse) {
   return `[${s.name} (${s.transliteration}) | سورة ${s.id} | ${s.type === "meccan" ? "مكية" : "مدنية"} | آية ${v.id}/${s.total_verses} | ${pos}]\nعربي: ${v.text}\nترجمة: ${v.translation}`;
 }
 
+// --- API Route ---
+
 export async function POST(req: Request) {
   if (!process.env.GEMINI_API_KEY) {
     return new Response(JSON.stringify({ error: "GEMINI_API_KEY is not set" }), { status: 500, headers: { "Content-Type": "application/json" } });
@@ -67,11 +121,23 @@ export async function POST(req: Request) {
   try {
     const { messages } = await req.json();
     const last = messages[messages.length - 1]?.content || "";
-    const ctx = searchQuran(last);
+
+    // Detect request type and build context
+    let context = "";
+    const adhkarType = isAdhkarRequest(last);
+
+    if (adhkarType) {
+      context = getAdhkarContext(adhkarType);
+    } else {
+      const quranCtx = searchQuran(last);
+      if (quranCtx) {
+        context = `[QURAN_CONTEXT — استخدم النص العربي أدناه بالضبط.]\n${quranCtx}`;
+      }
+    }
 
     const contents = messages.slice(-10).map((m: any, i: number, a: any[]) => ({
       role: m.role === "assistant" ? "model" : "user",
-      parts: [{ text: i === a.length - 1 && m.role === "user" && ctx ? `${m.content}\n\n[QURAN_CONTEXT]\n${ctx}` : m.content }],
+      parts: [{ text: i === a.length - 1 && m.role === "user" && context ? `${m.content}\n\n${context}` : m.content }],
     }));
 
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
