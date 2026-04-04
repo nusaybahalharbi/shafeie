@@ -1,0 +1,18 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url("https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@300;400;500;700&display=swap");
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #060e1a;
+  color: #b8c4d4;
+  direction: rtl;
+}
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(195,166,113,0.15); border-radius: 3px; }
+::selection { background: rgba(195,166,113,0.25); color: #c3a671; }
