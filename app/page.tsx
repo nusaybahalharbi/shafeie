@@ -8,6 +8,7 @@ import ChatInput from "@/components/ChatInput";
 import EmptyState from "@/components/EmptyState";
 import LoadingIndicator from "@/components/LoadingIndicator";
 import AyahCard from "@/components/AyahCard";
+import DhikrCard from "@/components/DhikrCard";
 
 export default function Home() {
   const [lang, setLang] = useState<"ar" | "en">("ar");
@@ -23,6 +24,8 @@ export default function Home() {
     }
   };
 
+  let streamDhikrCount = 0;
+
   return (
     <div className="flex min-h-screen flex-col" dir={lang === "ar" ? "rtl" : "ltr"}>
       <Header lang={lang} onLangChange={setLang} />
@@ -34,11 +37,18 @@ export default function Home() {
               <div className="mb-5 flex gap-3 animate-fade-in">
                 <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-nur-gold to-nur-gold-dim text-sm shadow-lg shadow-nur-gold/20">☽</div>
                 <div className="min-w-0 flex-1">
-                  {parseAyahCards(streamingContent, true).map((seg, i) => seg.type === "card" ? <AyahCard key={i} fields={seg.fields} /> : (
-                    <p key={i} className="whitespace-pre-wrap font-body text-sm leading-[1.85] text-nur-text-dim" dir="auto">
-                      {seg.content}<span className="mr-0.5 inline-block h-4 w-[2px] animate-pulse bg-nur-gold/60" />
-                    </p>
-                  ))}
+                  {parseAyahCards(streamingContent, true).map((seg, i) => {
+                    if (seg.type === "card") return <AyahCard key={i} fields={seg.fields} />;
+                    if (seg.type === "dhikr") {
+                      streamDhikrCount++;
+                      return <DhikrCard key={i} fields={seg.fields} index={streamDhikrCount} />;
+                    }
+                    return (
+                      <p key={i} className="whitespace-pre-wrap font-body text-sm leading-[1.85] text-nur-text-dim" dir="auto">
+                        {seg.content}<span className="mr-0.5 inline-block h-4 w-[2px] animate-pulse bg-nur-gold/60" />
+                      </p>
+                    );
+                  })}
                 </div>
               </div>
             )}

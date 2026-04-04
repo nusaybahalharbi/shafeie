@@ -7,55 +7,65 @@ export const maxDuration = 60;
 
 interface Verse { id: number; text: string; translation: string; }
 interface Surah { id: number; name: string; transliteration: string; translation: string; type: string; total_verses: number; verses: Verse[]; }
-interface Dhikr { id: number; text: string; repetition: string; time: string; }
 
 const quran: Surah[] = quranData as Surah[];
-const adhkar: Dhikr[] = (adhkarData as any).adhkar as Dhikr[];
-const adhkarSource = (adhkarData as any).source as string;
+const morningEvening = (adhkarData as any).morning_evening;
+const duas = (adhkarData as any).duas;
+const sources = (adhkarData as any).sources;
 
-// --- Adhkar detection ---
+// --- Request classification ---
 
-const ADHKAR_KEYWORDS = [
-  "أذكار", "الأذكار", "اذكار", "الاذكار",
-  "أذكار الصباح", "اذكار الصباح", "أذكار المساء", "اذكار المساء",
-  "أذكار الصباح والمساء", "اذكار الصباح والمساء",
-  "adhkar", "morning adhkar", "evening adhkar",
-  "morning remembrance", "evening remembrance",
-  "azkar", "morning azkar", "evening azkar",
-];
+type RequestType = "morning" | "evening" | "both_adhkar" | "dua" | "quran" | null;
 
-function isAdhkarRequest(q: string): false | "morning" | "evening" | "both" {
+function classifyRequest(q: string): RequestType {
   const ql = q.toLowerCase();
-  const hasAdhkar = ADHKAR_KEYWORDS.some(k => ql.includes(k));
-  if (!hasAdhkar) return false;
 
-  const hasMorning = ql.includes("صباح") || ql.includes("morning");
-  const hasEvening = ql.includes("مساء") || ql.includes("evening");
+  const adhkarWords = ["أذكار","الأذكار","اذكار","الاذكار","adhkar","azkar","remembrance"];
+  const morningWords = ["صباح","morning","الصباح"];
+  const eveningWords = ["مساء","evening","المساء"];
+  const duaWords = ["دعاء","أدعية","ادعية","الدعاء","dua","duas","supplication","supplications","دعوات"];
 
-  if (hasMorning && !hasEvening) return "morning";
-  if (hasEvening && !hasMorning) return "evening";
-  return "both";
+  const hasAdhkar = adhkarWords.some(k => ql.includes(k));
+  const hasMorning = morningWords.some(k => ql.includes(k));
+  const hasEvening = eveningWords.some(k => ql.includes(k));
+  const hasDua = duaWords.some(k => ql.includes(k));
+
+  if (hasAdhkar) {
+    if (hasMorning && !hasEvening) return "morning";
+    if (hasEvening && !hasMorning) return "evening";
+    return "both_adhkar";
+  }
+  if (hasDua) return "dua";
+  return null;
 }
 
-function getAdhkarContext(type: "morning" | "evening" | "both"): string {
-  let filtered: Dhikr[];
+function getAdhkarContext(type: RequestType): string {
+  const ksuSource = sources.find((s: any) => s.id === "ksu");
+  const nuqSource = sources.find((s: any) => s.id === "nuqayah");
 
-  if (type === "morning") {
-    filtered = adhkar.filter(d => d.time === "صباح" || d.time === "صباح ومساء");
-  } else if (type === "evening") {
-    filtered = adhkar.filter(d => d.time === "مساء" || d.time === "صباح ومساء");
-  } else {
-    filtered = adhkar;
+  if (type === "morning" || type === "evening" || type === "both_adhkar") {
+    let filtered;
+    if (type === "morning") filtered = morningEvening.filter((d: any) => d.time === "صباح" || d.time === "صباح ومساء");
+    else if (type === "evening") filtered = morningEvening.filter((d: any) => d.time === "مساء" || d.time === "صباح ومساء");
+    else filtered = morningEvening;
+
+    const label = type === "morning" ? "أذكار الصباح" : type === "evening" ? "أذكار المساء" : "أذكار الصباح والمساء";
+    const items = filtered.map((d: any, i: number) =>
+      `【الذكر】: ${d.text}\n【التكرار】: ${d.repetition}\n【الوقت】: ${d.time}`
+    ).join("\n\n");
+
+    return `[ADHKAR_CONTEXT — المصدر: ${ksuSource.name}]\nالنوع: ${label}\n\n${items}\n\nاعرض كل ذكر باستخدام الصيغة أعلاه بالضبط. لا تُعدّل النصوص.`;
   }
 
-  const header = `[ADHKAR_CONTEXT — المصدر: ${adhkarSource}]\n`;
-  const typeLabel = type === "morning" ? "أذكار الصباح" : type === "evening" ? "أذكار المساء" : "أذكار الصباح والمساء";
+  if (type === "dua") {
+    const items = duas.map((d: any) =>
+      `【الذكر】: ${d.text}\n【التكرار】: مرة واحدة\n【الوقت】: ${d.category}`
+    ).join("\n\n");
 
-  const items = filtered.map((d, i) =>
-    `${i + 1}. الذكر: ${d.text}\nالتكرار: ${d.repetition}\nالوقت: ${d.time}`
-  ).join("\n\n");
+    return `[ADHKAR_CONTEXT — المصدر: ${nuqSource.name}]\nالنوع: أدعية من الكتاب والسنة الصحيحة\n\n${items}\n\nاعرض كل دعاء باستخدام الصيغة أعلاه بالضبط. لا تُعدّل النصوص.`;
+  }
 
-  return `${header}النوع: ${typeLabel}\n\n${items}`;
+  return "";
 }
 
 // --- Quran search ---
@@ -122,17 +132,14 @@ export async function POST(req: Request) {
     const { messages } = await req.json();
     const last = messages[messages.length - 1]?.content || "";
 
-    // Detect request type and build context
     let context = "";
-    const adhkarType = isAdhkarRequest(last);
+    const reqType = classifyRequest(last);
 
-    if (adhkarType) {
-      context = getAdhkarContext(adhkarType);
+    if (reqType) {
+      context = getAdhkarContext(reqType);
     } else {
       const quranCtx = searchQuran(last);
-      if (quranCtx) {
-        context = `[QURAN_CONTEXT — استخدم النص العربي أدناه بالضبط.]\n${quranCtx}`;
-      }
+      if (quranCtx) context = `[QURAN_CONTEXT — استخدم النص العربي أدناه بالضبط.]\n${quranCtx}`;
     }
 
     const contents = messages.slice(-10).map((m: any, i: number, a: any[]) => ({
@@ -145,15 +152,10 @@ export async function POST(req: Request) {
     const response = await ai.models.generateContentStream({
       model: "gemini-2.5-flash",
       contents: contents,
-      config: {
-        maxOutputTokens: 4096,
-        temperature: 0.3,
-        systemInstruction: SYSTEM_PROMPT,
-      },
+      config: { maxOutputTokens: 4096, temperature: 0.3, systemInstruction: SYSTEM_PROMPT },
     });
 
     const enc = new TextEncoder();
-
     const stream = new ReadableStream({
       async start(ctrl) {
         try {

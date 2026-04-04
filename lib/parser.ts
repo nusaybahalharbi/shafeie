@@ -3,11 +3,21 @@ export interface AyahFields {
   makkiMadani: string; location: string; tafsir: string;
   sababNuzul: string; hadith: string; narrations: string;
 }
-export type Segment = { type: "text"; content: string } | { type: "card"; fields: AyahFields };
+
+export interface DhikrFields {
+  text: string; repetition: string; time: string;
+}
+
+export type Segment =
+  | { type: "text"; content: string }
+  | { type: "card"; fields: AyahFields }
+  | { type: "dhikr"; fields: DhikrFields };
 
 export function parseAyahCards(text: string, isStreaming: boolean = false): Segment[] {
   const segments: Segment[] = [];
-  const re = /===AYAH_START===([\s\S]*?)===AYAH_END===/g;
+
+  // First pass: extract ayah cards
+  const ayahRe = /===AYAH_START===([\s\S]*?)===AYAH_END===/g;
   let last = 0, m;
 
   const fieldMap: Record<string, keyof AyahFields> = {
@@ -23,9 +33,9 @@ export function parseAyahCards(text: string, isStreaming: boolean = false): Segm
     "روايات ذات صلة": "narrations", "Related Narrations": "narrations",
   };
 
-  while ((m = re.exec(text)) !== null) {
+  while ((m = ayahRe.exec(text)) !== null) {
     const before = text.substring(last, m.index).trim();
-    if (before) segments.push({ type: "text", content: before });
+    if (before) parseTextWithDhikr(before, segments);
 
     const fields: AyahFields = { arabic:"",translation:"",surah:"",ayahNumber:"",makkiMadani:"",location:"",tafsir:"",sababNuzul:"",hadith:"",narrations:"" };
     const fr = /【([^】]+)】:\s*([\s\S]*?)(?=【|$)/g;
@@ -49,12 +59,44 @@ export function parseAyahCards(text: string, isStreaming: boolean = false): Segm
 
   if (!isStreaming && rest) rest = rest.replace(/===AYAH_START===|===AYAH_END===/g, "").trim();
 
-  if (rest) segments.push({ type: "text", content: rest });
+  if (rest) parseTextWithDhikr(rest, segments);
+
   if (!segments.length && text.trim()) {
     let cleaned = text.replace(/===AYAH_START===|===AYAH_END===/g, "").trim();
-    if (cleaned) segments.push({ type: "text", content: cleaned });
+    if (cleaned) parseTextWithDhikr(cleaned, segments);
   }
   return segments;
+}
+
+// Parse text blocks for dhikr patterns like 【الذكر】: ... 【التكرار】: ... 【الوقت】: ...
+function parseTextWithDhikr(text: string, segments: Segment[]) {
+  const dhikrPattern = /【الذكر】\s*:\s*([\s\S]*?)【التكرار】\s*:\s*([\s\S]*?)【الوقت】\s*:\s*([^\n【]*)/g;
+  let lastIdx = 0;
+  let dm;
+
+  while ((dm = dhikrPattern.exec(text)) !== null) {
+    const before = text.substring(lastIdx, dm.index).trim();
+    if (before && !before.match(/^\*?\*?$/)) {
+      const cleaned = before.replace(/\*\*/g, "").trim();
+      if (cleaned) segments.push({ type: "text", content: cleaned });
+    }
+
+    segments.push({
+      type: "dhikr",
+      fields: {
+        text: dm[1].trim(),
+        repetition: dm[2].trim(),
+        time: dm[3].trim(),
+      }
+    });
+    lastIdx = dm.index + dm[0].length;
+  }
+
+  const remaining = text.substring(lastIdx).trim();
+  if (remaining) {
+    const cleaned = remaining.replace(/\*\*/g, "").trim();
+    if (cleaned) segments.push({ type: "text", content: cleaned });
+  }
 }
 
 export function isArabic(t: string) { return (t.match(/[\u0600-\u06FF]/g)||[]).length > (t.match(/[a-zA-Z]/g)||[]).length; }
