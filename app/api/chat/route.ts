@@ -149,11 +149,39 @@ export async function POST(req: Request) {
 
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-    const response = await ai.models.generateContentStream({
-      model: "gemini-2.5-flash",
+   let response;
+
+try {
+  response = await ai.models.generateContentStream({
+    model: "gemini-2.5-flash",
+    contents: contents,
+    config: {
+      maxOutputTokens: 4096,
+      temperature: 0.3,
+      systemInstruction: SYSTEM_PROMPT,
+    },
+  });
+} catch (e: any) {
+  if (
+    e.message?.includes("503") ||
+    e.message?.includes("UNAVAILABLE") ||
+    e.message?.includes("overloaded")
+  ) {
+    console.log("Gemini 2.5 Flash unavailable. Falling back to Gemini 2.0 Flash.");
+
+    response = await ai.models.generateContentStream({
+      model: "gemini-2.0-flash-001",
       contents: contents,
-      config: { maxOutputTokens: 4096, temperature: 0.3, systemInstruction: SYSTEM_PROMPT },
+      config: {
+        maxOutputTokens: 4096,
+        temperature: 0.3,
+        systemInstruction: SYSTEM_PROMPT,
+      },
     });
+  } else {
+    throw e;
+  }
+}
 
     const enc = new TextEncoder();
     const stream = new ReadableStream({
