@@ -74,3 +74,47 @@ export function isEmpty(v?: string) {
   const l = v.toLowerCase().trim();
   return l.startsWith("no ") || l.startsWith("لا يوجد") || l.startsWith("لم يُوجد") || l.startsWith("لا توجد") || l === "n/a";
 }
+export type Segment =
+  | { type: "ayah"; content: string }
+  | { type: "dhikr"; content: string }
+  | { type: "text"; content: string };
+
+export function parseAyahCards(text: string): Segment[] {
+  if (!text) return [];
+
+  const segments: Segment[] = [];
+
+  const blocks = text.split(/\n{2,}/);
+
+  for (const block of blocks) {
+    const trimmed = block.trim();
+    if (!trimmed) continue;
+
+    if (
+      trimmed.includes("عربي:") ||
+      trimmed.includes("ترجمة:") ||
+      trimmed.includes("[QURAN_CONTEXT]")
+    ) {
+      segments.push({
+        type: "ayah",
+        content: trimmed,
+      });
+    } else if (
+      trimmed.includes("【الذكر】") ||
+      trimmed.includes("【التكرار】") ||
+      trimmed.includes("【الوقت】")
+    ) {
+      segments.push({
+        type: "dhikr",
+        content: trimmed,
+      });
+    } else {
+      segments.push({
+        type: "text",
+        content: trimmed,
+      });
+    }
+  }
+
+  return segments;
+}
