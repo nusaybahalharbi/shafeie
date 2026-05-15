@@ -1,11 +1,20 @@
 export interface AyahFields {
-  arabic: string; translation: string; surah: string; ayahNumber: string;
-  makkiMadani: string; location: string; tafsir: string;
-  sababNuzul: string; hadith: string; narrations: string;
+  arabic: string;
+  translation: string;
+  surah: string;
+  ayahNumber: string;
+  makkiMadani: string;
+  location: string;
+  tafsir: string;
+  sababNuzul: string;
+  hadith: string;
+  narrations: string;
 }
 
 export interface DhikrFields {
-  text: string; repetition: string; time: string;
+  text: string;
+  repetition: string;
+  time: string;
 }
 
 export type Segment =
@@ -13,108 +22,183 @@ export type Segment =
   | { type: "card"; fields: AyahFields }
   | { type: "dhikr"; fields: DhikrFields };
 
+const emptyAyahFields = (): AyahFields => ({
+  arabic: "",
+  translation: "",
+  surah: "",
+  ayahNumber: "",
+  makkiMadani: "",
+  location: "",
+  tafsir: "",
+  sababNuzul: "",
+  hadith: "",
+  narrations: "",
+});
+
+const fieldMap: Record<string, keyof AyahFields> = {
+  "الآية": "arabic",
+  Arabic: "arabic",
+
+  "الترجمة": "translation",
+  Translation: "translation",
+
+  "السورة": "surah",
+  Surah: "surah",
+
+  "رقم الآية": "ayahNumber",
+  "Ayah Number": "ayahNumber",
+
+  "مكية/مدنية": "makkiMadani",
+  "Makki/Madani": "makkiMadani",
+
+  "الموقع في السورة": "location",
+  "Location in Surah": "location",
+
+  "التفسير (ابن كثير)": "tafsir",
+  "Tafsir (Ibn Kathir)": "tafsir",
+
+  "سبب النزول": "sababNuzul",
+  "Sabab al-Nuzul": "sababNuzul",
+
+  "صحيح البخاري": "hadith",
+  "Sahih al-Bukhari": "hadith",
+
+  "روايات ذات صلة": "narrations",
+  "Related Narrations": "narrations",
+};
+
 export function parseResponse(text: string, isStreaming = false): Segment[] {
   const segments: Segment[] = [];
-  const ayahRe = /===AYAH_START===([\s\S]*?)===AYAH_END===/g;
-  let last = 0, m;
 
-  const fieldMap: Record<string, keyof AyahFields> = {
-    "الآية": "arabic", Arabic: "arabic", "الترجمة": "translation", Translation: "translation",
-    "السورة": "surah", Surah: "surah", "رقم الآية": "ayahNumber", "Ayah Number": "ayahNumber",
-    "مكية/مدنية": "makkiMadani", "Makki/Madani": "makkiMadani",
-    "الموقع في السورة": "location", "Location in Surah": "location",
-    "التفسير (ابن كثير)": "tafsir", "Tafsir (Ibn Kathir)": "tafsir",
-    "سبب النزول": "sababNuzul", "Sabab al-Nuzul": "sababNuzul",
-    "صحيح البخاري": "hadith", "Sahih al-Bukhari": "hadith",
-    "روايات ذات صلة": "narrations", "Related Narrations": "narrations",
-  };
+  if (!text?.trim()) return segments;
 
-  while ((m = ayahRe.exec(text)) !== null) {
-    const before = text.substring(last, m.index).trim();
-    if (before) parseDhikr(before, segments);
-    const fields: AyahFields = { arabic:"",translation:"",surah:"",ayahNumber:"",makkiMadani:"",location:"",tafsir:"",sababNuzul:"",hadith:"",narrations:"" };
-    const fr = /【([^】]+)】:\s*([\s\S]*?)(?=【|$)/g;
-    let fm;
-    while ((fm = fr.exec(m[1])) !== null) { const k = fm[1].trim(); if (fieldMap[k]) fields[fieldMap[k]] = fm[2].trim(); }
-    segments.push({ type: "card", fields });
-    last = m.index + m[0].length;
+  const ayahRegex = /===AYAH_START===([\s\S]*?)===AYAH_END===/g;
+
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = ayahRegex.exec(text)) !== null) {
+    const before = text.substring(lastIndex, match.index).trim();
+
+    if (before) {
+      parseDhikr(before, segments);
+    }
+
+    const fields = emptyAyahFields();
+
+    const fieldRegex = /【([^】]+)】:\s*([\s\S]*?)(?=【|$)/g;
+    let fieldMatch: RegExpExecArray | null;
+
+    while ((fieldMatch = fieldRegex.exec(match[1])) !== null) {
+      const key = fieldMatch[1].trim();
+      const value = fieldMatch[2].trim();
+
+      if (fieldMap[key]) {
+        fields[fieldMap[key]] = value;
+      }
+    }
+
+    segments.push({
+      type: "card",
+      fields,
+    });
+
+    lastIndex = match.index + match[0].length;
   }
 
-  let rest = text.substring(last).trim();
+  let rest = text.substring(lastIndex).trim();
+
   if (isStreaming && rest) {
-    const si = rest.indexOf("===AYAH_START===");
-    if (si !== -1) rest = rest.substring(0, si).trim();
-    const pi = rest.lastIndexOf("===");
-    if (pi !== -1 && pi > rest.length - 20) rest = rest.substring(0, pi).trim();
+    const startIndex = rest.indexOf("===AYAH_START===");
+
+    if (startIndex !== -1) {
+      rest = rest.substring(0, startIndex).trim();
+    }
+
+    const partialMarkerIndex = rest.lastIndexOf("===");
+
+    if (partialMarkerIndex !== -1 && partialMarkerIndex > rest.length - 20) {
+      rest = rest.substring(0, partialMarkerIndex).trim();
+    }
   }
-  if (!isStreaming && rest) rest = rest.replace(/===AYAH_START===|===AYAH_END===/g, "").trim();
-  if (rest) parseDhikr(rest, segments);
-  if (!segments.length && text.trim()) {
-    const c = text.replace(/===AYAH_START===|===AYAH_END===/g, "").trim();
-    if (c) parseDhikr(c, segments);
+
+  if (!isStreaming && rest) {
+    rest = rest.replace(/===AYAH_START===|===AYAH_END===/g, "").trim();
   }
-  return segments;
-}
 
-function parseDhikr(text: string, segments: Segment[]) {
-  const dhikrRe = /【الذكر】\s*:\s*([\s\S]*?)【التكرار】\s*:\s*([\s\S]*?)【الوقت】\s*:\s*([^\n【]*)/g;
-  let last = 0, dm;
-  while ((dm = dhikrRe.exec(text)) !== null) {
-    const before = text.substring(last, dm.index).replace(/\*\*/g, "").trim();
-    if (before) segments.push({ type: "text", content: before });
-    segments.push({ type: "dhikr", fields: { text: dm[1].trim(), repetition: dm[2].trim(), time: dm[3].trim() } });
-    last = dm.index + dm[0].length;
+  if (rest) {
+    parseDhikr(rest, segments);
   }
-  const remaining = text.substring(last).replace(/\*\*/g, "").trim();
-  if (remaining) segments.push({ type: "text", content: remaining });
-}
 
-export function isEmpty(v?: string) {
-  if (!v) return true;
-  const l = v.toLowerCase().trim();
-  return l.startsWith("no ") || l.startsWith("لا يوجد") || l.startsWith("لم يُوجد") || l.startsWith("لا توجد") || l === "n/a";
-}
-export type Segment =
-  | { type: "ayah"; content: string }
-  | { type: "dhikr"; content: string }
-  | { type: "text"; content: string };
+  if (!segments.length) {
+    const cleaned = text
+      .replace(/===AYAH_START===|===AYAH_END===/g, "")
+      .trim();
 
-export function parseAyahCards(text: string): Segment[] {
-  if (!text) return [];
-
-  const segments: Segment[] = [];
-
-  const blocks = text.split(/\n{2,}/);
-
-  for (const block of blocks) {
-    const trimmed = block.trim();
-    if (!trimmed) continue;
-
-    if (
-      trimmed.includes("عربي:") ||
-      trimmed.includes("ترجمة:") ||
-      trimmed.includes("[QURAN_CONTEXT]")
-    ) {
-      segments.push({
-        type: "ayah",
-        content: trimmed,
-      });
-    } else if (
-      trimmed.includes("【الذكر】") ||
-      trimmed.includes("【التكرار】") ||
-      trimmed.includes("【الوقت】")
-    ) {
-      segments.push({
-        type: "dhikr",
-        content: trimmed,
-      });
-    } else {
-      segments.push({
-        type: "text",
-        content: trimmed,
-      });
+    if (cleaned) {
+      parseDhikr(cleaned, segments);
     }
   }
 
   return segments;
+}
+
+function parseDhikr(text: string, segments: Segment[]) {
+  const dhikrRegex =
+    /【الذكر】\s*:\s*([\s\S]*?)【التكرار】\s*:\s*([\s\S]*?)【الوقت】\s*:\s*([^\n【]*)/g;
+
+  let lastIndex = 0;
+  let dhikrMatch: RegExpExecArray | null;
+
+  while ((dhikrMatch = dhikrRegex.exec(text)) !== null) {
+    const before = text
+      .substring(lastIndex, dhikrMatch.index)
+      .replace(/\*\*/g, "")
+      .trim();
+
+    if (before) {
+      segments.push({
+        type: "text",
+        content: before,
+      });
+    }
+
+    segments.push({
+      type: "dhikr",
+      fields: {
+        text: dhikrMatch[1].trim(),
+        repetition: dhikrMatch[2].trim(),
+        time: dhikrMatch[3].trim(),
+      },
+    });
+
+    lastIndex = dhikrMatch.index + dhikrMatch[0].length;
+  }
+
+  const remaining = text.substring(lastIndex).replace(/\*\*/g, "").trim();
+
+  if (remaining) {
+    segments.push({
+      type: "text",
+      content: remaining,
+    });
+  }
+}
+
+export function parseAyahCards(text: string, isStreaming = false): Segment[] {
+  return parseResponse(text, isStreaming);
+}
+
+export function isEmpty(value?: string) {
+  if (!value) return true;
+
+  const normalized = value.toLowerCase().trim();
+
+  return (
+    normalized.startsWith("no ") ||
+    normalized.startsWith("لا يوجد") ||
+    normalized.startsWith("لم يُوجد") ||
+    normalized.startsWith("لا توجد") ||
+    normalized === "n/a"
+  );
 }
