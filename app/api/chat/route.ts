@@ -27,10 +27,10 @@ const duas = (adhkarData as any).duas;
 const sources = (adhkarData as any).sources;
 
 const MODELS = [
-  process.env.GEMINI_MODEL || "gemini-2.5-flash",
-  process.env.GEMINI_FALLBACK_MODEL || "gemini-2.5-flash-lite",
+  "gemini-2.5-flash",
+  "gemini-2.5-flash-lite",
   "gemini-flash-latest",
-].filter(Boolean);
+];;
 
 function jsonError(message: string, status = 500) {
   return new Response(JSON.stringify({ error: message }), {
