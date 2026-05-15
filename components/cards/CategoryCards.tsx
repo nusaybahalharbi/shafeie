@@ -1,4 +1,5 @@
 "use client";
+
 import { useApp } from "@/lib/context";
 
 const CATEGORIES = [
@@ -18,21 +19,22 @@ export default function CategoryCards({ onSelect }: { onSelect: (q: string) => v
   const { lang } = useApp();
 
   return (
-    <section className="mx-auto max-w-5xl px-5 pb-16">
-      <h2 className="mb-6 text-center font-display text-lg text-d-text-dim [.light_&]:text-l-text-dim">
+    <section className="mx-auto w-full max-w-5xl px-3 pb-12 sm:px-5 sm:pb-16">
+      <h2 className="mb-5 text-center font-display text-lg text-d-text-dim [.light_&]:text-l-text-dim sm:mb-6">
         {lang === "ar" ? "استكشف المواضيع" : "Explore Topics"}
       </h2>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
-        {CATEGORIES.map((cat, i) => (
+      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 lg:grid-cols-5">
+        {CATEGORIES.map((category, index) => (
           <button
-            key={i}
-            onClick={() => onSelect(lang === "ar" ? cat.query_ar : cat.query_en)}
-            className="card-hover group flex flex-col items-center gap-2.5 rounded-2xl border border-d-border [.light_&]:border-l-border bg-d-surface/30 [.light_&]:bg-l-surface/60 px-4 py-5 text-center transition-all hover:border-d-gold/20 [.light_&]:hover:border-l-gold/20 hover:bg-d-gold-soft [.light_&]:hover:bg-l-gold-soft"
-            style={{ animationDelay: `${i * 50}ms` }}
+            key={index}
+            onClick={() => onSelect(lang === "ar" ? category.query_ar : category.query_en)}
+            className="group flex min-h-[92px] flex-col items-center justify-center gap-2 rounded-2xl border border-d-border bg-d-surface/30 px-3 py-4 text-center transition-colors hover:border-d-gold/25 hover:bg-d-gold-soft [.light_&]:border-l-border [.light_&]:bg-l-surface/70 [.light_&]:hover:border-l-gold/25 [.light_&]:hover:bg-l-gold-soft sm:min-h-[108px] sm:px-4 sm:py-5"
           >
-            <span className="text-2xl transition-transform group-hover:scale-110">{cat.icon}</span>
-            <span className="font-body text-[13px] text-d-text-dim [.light_&]:text-l-text-dim group-hover:text-d-gold [.light_&]:group-hover:text-l-gold transition-colors">
-              {lang === "ar" ? cat.ar : cat.en}
+            <span className="text-2xl leading-none transition-transform group-hover:scale-105 sm:text-3xl">
+              {category.icon}
+            </span>
+            <span className="font-body text-[13px] leading-5 text-d-text-dim transition-colors group-hover:text-d-gold [.light_&]:text-l-text-dim [.light_&]:group-hover:text-l-gold">
+              {lang === "ar" ? category.ar : category.en}
             </span>
           </button>
         ))}
