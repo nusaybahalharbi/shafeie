@@ -1,19 +1,12 @@
-# شفيع — مساعد بحث قرآني
+# شفيع — مساعد إسلامي موثوق
 
-مساعد ذكاء اصطناعي موثوق للبحث القرآني والتفسير والإرشاد.
+Premium AI-powered Islamic knowledge platform.
 
-## التشغيل
+## Deploy
 
 ```bash
 npm install
 npm run dev
 ```
 
-## النشر على Vercel
-
-1. ارفع على GitHub
-2. vercel.com/new → استورد الريبو
-3. أضف متغير البيئة: `GEMINI_API_KEY`
-4. Deploy
-
-المفتاح من: https://aistudio.google.com/apikey
+Vercel: Add `GEMINI_API_KEY` → Deploy
