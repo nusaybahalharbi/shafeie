@@ -1,4 +1,3 @@
-import { GoogleGenAI } from "@google/genai";
 import { SYSTEM_PROMPT } from "@/lib/system-prompt";
 import quranData from "@/public/data/quran.json";
 import adhkarData from "@/public/data/adhkar.json";
@@ -26,35 +25,13 @@ const morningEvening = (adhkarData as any).morning_evening;
 const duas = (adhkarData as any).duas;
 const sources = (adhkarData as any).sources;
 
-const MODELS = [
-  "gemini-2.5-flash",
-  "gemini-2.5-flash-lite",
-  "gemini-flash-latest",
-];;
+const MODEL = process.env.OPENAI_MODEL || "gpt-6.2-astra";
 
 function jsonError(message: string, status = 500) {
   return new Response(JSON.stringify({ error: message }), {
     status,
     headers: { "Content-Type": "application/json; charset=utf-8" },
   });
-}
-
-function isRetryableModelError(error: any) {
-  const msg = String(error?.message || "");
-  const status = error?.status;
-
-  return (
-    status === 404 ||
-    status === 429 ||
-    status === 503 ||
-    msg.includes("404") ||
-    msg.includes("429") ||
-    msg.includes("503") ||
-    msg.includes("NOT_FOUND") ||
-    msg.includes("UNAVAILABLE") ||
-    msg.includes("RESOURCE_EXHAUSTED") ||
-    msg.includes("no longer available")
-  );
 }
 
 function classifyRequest(
@@ -270,8 +247,8 @@ function searchQuran(q: string): string {
 }
 
 export async function POST(req: Request) {
-  if (!process.env.GEMINI_API_KEY) {
-    return jsonError("GEMINI_API_KEY is not set", 500);
+  if (!process.env.OPENAI_API_KEY) {
+    return jsonError("OPENAI_API_KEY is not set", 500);
   }
 
   try {
@@ -294,94 +271,82 @@ export async function POST(req: Request) {
       if (quranContext) context = `[QURAN_CONTEXT]\n${quranContext}`;
     }
 
-    const contents = messages.slice(-10).map((m: any, index: number, arr: any[]) => {
+    const input = messages.slice(-10).map((m: any, index: number, arr: any[]) => {
       const isLastUserMessage =
         index === arr.length - 1 && m.role === "user" && context;
 
       return {
-        role: m.role === "assistant" ? "model" : "user",
-        parts: [
-          {
-            text: isLastUserMessage
-              ? `${m.content}\n\n${context}`
-              : String(m.content || ""),
-          },
-        ],
+        role: m.role === "assistant" ? "assistant" : "user",
+        content: isLastUserMessage
+          ? `${m.content}\n\n${context}`
+          : String(m.content || ""),
       };
     });
 
-    const ai = new GoogleGenAI({
-      apiKey: process.env.GEMINI_API_KEY,
+    const response = await fetch("https://api.openai.com/v1/responses", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: MODEL,
+        instructions: SYSTEM_PROMPT,
+        input,
+        max_output_tokens: 4096,
+        stream: true,
+      }),
     });
 
-    let response: any = null;
-    let lastError: any = null;
-    let selectedModel = "";
-
-    for (const model of MODELS) {
-      try {
-        console.info(`Trying Gemini model: ${model}`);
-
-        response = await ai.models.generateContentStream({
-          model,
-          contents,
-          config: {
-            maxOutputTokens: 4096,
-            temperature: 0.3,
-            systemInstruction: SYSTEM_PROMPT,
-          },
-        });
-
-        selectedModel = model;
-        break;
-      } catch (error: any) {
-        lastError = error;
-
-        console.error(`Gemini model failed: ${model}`, {
-          status: error?.status,
-          message: error?.message,
-        });
-
-        if (!isRetryableModelError(error)) {
-          break;
-        }
-      }
-    }
-
-    if (!response) {
-      console.error("All Gemini models failed:", {
-        modelsTried: MODELS,
-        error: lastError?.message,
-        status: lastError?.status,
+    if (!response.ok || !response.body) {
+      const details = await response.text();
+      console.error("OpenAI request failed", {
+        status: response.status,
+        details: details.substring(0, 500),
       });
-
-      return jsonError(
-        "تعذر توليد الإجابة حالياً. الرجاء المحاولة مرة أخرى.",
-        503
-      );
+      return jsonError("تعذر توليد الإجابة حالياً. الرجاء المحاولة مرة أخرى.", response.status || 503);
     }
 
-    console.info(`Gemini response streaming with model: ${selectedModel}`);
+    console.info(`OpenAI response streaming with model: ${MODEL}`);
 
     const encoder = new TextEncoder();
 
     const stream = new ReadableStream({
       async start(controller) {
         try {
-          for await (const chunk of response) {
-            const text = chunk?.text;
+          const reader = response.body!.getReader();
+          const decoder = new TextDecoder();
+          let buffer = "";
 
-            if (text) {
-              controller.enqueue(
-                encoder.encode(`data: ${JSON.stringify({ text })}\n\n`)
-              );
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+
+            const events = buffer.split("\n\n");
+            buffer = events.pop() || "";
+
+            for (const event of events) {
+              const line = event.split("\n").find((item) => item.startsWith("data: "));
+              if (!line || line === "data: [DONE]") continue;
+
+              try {
+                const data = JSON.parse(line.slice(6));
+                if (data.type === "response.output_text.delta" && data.delta) {
+                  controller.enqueue(
+                    encoder.encode(`data: ${JSON.stringify({ text: data.delta })}\n\n`)
+                  );
+                }
+              } catch {
+                // Ignore incomplete/non-JSON stream events.
+              }
             }
           }
 
           controller.enqueue(encoder.encode("data: [DONE]\n\n"));
           controller.close();
         } catch (error: any) {
-          console.error("Gemini stream error:", {
+          console.error("OpenAI stream error:", {
             message: error?.message,
             status: error?.status,
           });
