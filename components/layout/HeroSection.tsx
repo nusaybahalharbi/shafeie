@@ -59,7 +59,9 @@ export default function HeroSection({ onSearch }: { onSearch: (q: string) => voi
               : "Search for a verse, topic, adhkar, or ask a question..."
           }
           dir="auto"
-          className="w-full rounded-[26px] border border-d-gold/25 bg-d-surface/80 py-5 ps-5 pe-28 font-body text-[15px] leading-6 text-d-text shadow-2xl shadow-black/20 outline-none backdrop-blur-xl transition-colors placeholder:text-d-text-muted focus:border-d-gold/55 [.light_&]:border-l-gold/20 [.light_&]:bg-white/90 [.light_&]:text-l-text [.light_&]:placeholder:text-l-text-muted [.light_&]:focus:border-l-gold/45 sm:py-6 sm:ps-7 sm:pe-32 sm:text-lg"
+          className={`w-full rounded-[26px] border border-d-gold/25 bg-d-surface/80 py-5 font-body text-[15px] leading-6 text-d-text shadow-2xl shadow-black/20 outline-none backdrop-blur-xl transition-colors placeholder:text-d-text-muted focus:border-d-gold/55 [.light_&]:border-l-gold/20 [.light_&]:bg-white/90 [.light_&]:text-l-text [.light_&]:placeholder:text-l-text-muted [.light_&]:focus:border-l-gold/45 sm:py-6 sm:text-lg ${
+            lang === "ar" ? "pl-28 pr-5 sm:pl-32 sm:pr-7" : "pl-5 pr-28 sm:pl-7 sm:pr-32"
+          }`}
         />
         <button
           type="submit"
@@ -86,3 +88,4 @@ export default function HeroSection({ onSearch }: { onSearch: (q: string) => voi
     </section>
   );
 }
+
