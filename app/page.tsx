@@ -52,7 +52,11 @@ function AppContent() {
   let streamDhikrCount = 0;
 
   return (
-    <div className="flex min-h-dvh flex-col overflow-x-hidden bg-d-bg text-d-text [.light_&]:bg-l-bg [.light_&]:text-l-text">
+    <div
+      className={`flex flex-col overflow-x-hidden bg-d-bg text-d-text [.light_&]:bg-l-bg [.light_&]:text-l-text ${
+        view === "chat" ? "h-dvh overflow-y-hidden" : "min-h-dvh"
+      }`}
+    >
       <Header />
 
       {view === "home" ? (
