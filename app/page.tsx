@@ -12,6 +12,7 @@ import ChatInput from "@/components/chat/ChatInput";
 import LoadingSkeleton from "@/components/chat/LoadingSkeleton";
 import AyahCard from "@/components/cards/AyahCard";
 import DhikrCard from "@/components/cards/DhikrCard";
+import ResponseCard from "@/components/cards/ResponseCard";
 
 function AppContent() {
   const { lang } = useApp();
@@ -119,16 +120,7 @@ function AppContent() {
                       return <DhikrCard key={index} fields={seg.fields} index={streamDhikrCount} />;
                     }
 
-                    return (
-                      <p
-                        key={index}
-                        className="whitespace-pre-wrap break-words font-body text-sm leading-[1.9] text-d-text-dim [.light_&]:text-l-text-dim"
-                        dir="auto"
-                      >
-                        {seg.content}
-                        <span className="ms-1 inline-block h-4 w-[2px] animate-pulse bg-d-gold/50 align-middle" />
-                      </p>
-                    );
+                    return <ResponseCard key={index} content={seg.content} index={index + 1} streaming />;
                   })}
                 </div>
               </div>
