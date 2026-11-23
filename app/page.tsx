@@ -27,22 +27,14 @@ function AppContent() {
     });
   };
 
+  // Move to the new question once, then leave scrolling fully under the
+  // user's control while the streamed answer grows. Re-scrolling on every
+  // token makes mobile Safari feel locked and continually pulls content away.
   useEffect(() => {
-    if (view === "chat") scrollToBottom("smooth");
-  }, [messages.length, view]);
-
-  useEffect(() => {
-    if (!streamingContent || view !== "chat") return;
-
-    const el = chatScrollRef.current;
-    if (!el) {
-      scrollToBottom("auto");
-      return;
+    if (view === "chat" && isLoading && !streamingContent) {
+      scrollToBottom("smooth");
     }
-
-    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
-    if (distanceFromBottom < 180) scrollToBottom("auto");
-  }, [streamingContent, view]);
+  }, [isLoading, view]);
 
   const handleSearch = (q: string) => {
     const query = q.trim();
@@ -144,3 +136,4 @@ export default function Home() {
     </AppProvider>
   );
 }
+
