@@ -7,18 +7,18 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 shrink-0 border-b border-d-border bg-d-bg/75 backdrop-blur-2xl [.light_&]:border-l-border [.light_&]:bg-l-bg/80">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-2 px-4 sm:h-[72px] sm:px-6">
-        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+      <div className="mx-auto flex h-[72px] max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
+        <div className="flex min-w-0 shrink items-center gap-3">
           <div className="brand-seal flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-d-gold/35 text-lg text-d-gold [.light_&]:border-l-gold/30 [.light_&]:text-l-gold sm:h-11 sm:w-11">
             ش
           </div>
 
-          <div className="min-w-0">
-            <h1 className="font-display text-xl font-bold leading-none text-d-gold [.light_&]:text-l-gold sm:text-2xl">
+          <div className="min-w-0 whitespace-nowrap text-right">
+            <h1 className="font-display text-xl font-bold leading-[1.15] text-d-gold [.light_&]:text-l-gold sm:text-2xl">
               شفيع
             </h1>
-            <p className="mt-1 truncate font-body text-[10px] leading-none tracking-wide text-d-text-muted [.light_&]:text-l-text-muted sm:text-[11px]">
-              {lang === "ar" ? "معرفة موثقة · بهدوء" : "Verified knowledge · with clarity"}
+            <p className="mt-1.5 font-body text-[9px] leading-[1.35] tracking-normal text-d-text-muted [.light_&]:text-l-text-muted min-[390px]:text-[10px] sm:text-[11px]">
+              {lang === "ar" ? "معرفة موثقة بهدوء" : "Verified knowledge with clarity"}
             </p>
           </div>
         </div>
