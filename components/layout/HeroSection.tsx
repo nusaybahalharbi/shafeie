@@ -59,12 +59,12 @@ export default function HeroSection({ onSearch }: { onSearch: (q: string) => voi
               : "Search for a verse, topic, adhkar, or ask a question..."
           }
           dir="auto"
-          className="w-full rounded-[26px] border border-d-gold/25 bg-d-surface/80 px-5 py-5 pe-20 font-body text-[16px] leading-6 text-d-text shadow-2xl shadow-black/20 outline-none backdrop-blur-xl transition-colors placeholder:text-d-text-muted focus:border-d-gold/55 [.light_&]:border-l-gold/20 [.light_&]:bg-white/90 [.light_&]:text-l-text [.light_&]:placeholder:text-l-text-muted [.light_&]:focus:border-l-gold/45 sm:px-7 sm:py-6 sm:text-lg"
+          className="w-full rounded-[26px] border border-d-gold/25 bg-d-surface/80 py-5 ps-5 pe-28 font-body text-[15px] leading-6 text-d-text shadow-2xl shadow-black/20 outline-none backdrop-blur-xl transition-colors placeholder:text-d-text-muted focus:border-d-gold/55 [.light_&]:border-l-gold/20 [.light_&]:bg-white/90 [.light_&]:text-l-text [.light_&]:placeholder:text-l-text-muted [.light_&]:focus:border-l-gold/45 sm:py-6 sm:ps-7 sm:pe-32 sm:text-lg"
         />
         <button
           type="submit"
           disabled={!input.trim()}
-          className="absolute end-2.5 top-1/2 flex h-14 w-14 -translate-y-1/2 items-center justify-center rounded-[20px] bg-d-gold text-xl text-d-bg shadow-lg shadow-d-gold/10 transition-all hover:scale-[1.03] disabled:opacity-30 [.light_&]:bg-l-gold [.light_&]:text-white sm:end-3"
+          className="absolute end-2.5 top-1/2 flex h-12 w-[78px] -translate-y-1/2 items-center justify-center rounded-[18px] bg-d-gold px-3 font-body text-sm font-bold leading-none text-d-bg shadow-lg shadow-d-gold/10 transition-all hover:scale-[1.03] disabled:opacity-30 [.light_&]:bg-l-gold [.light_&]:text-white sm:end-3 sm:h-14 sm:w-20 sm:text-base"
           aria-label={lang === "ar" ? "بحث" : "Search"}
         >
           {lang === "ar" ? "اسأل" : "Ask"}
