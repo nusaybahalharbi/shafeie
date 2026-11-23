@@ -26,23 +26,30 @@ export default function HeroSection({ onSearch }: { onSearch: (q: string) => voi
   };
 
   return (
-    <section className="relative flex flex-col items-center overflow-hidden px-4 pb-8 pt-10 text-center sm:px-5 sm:pb-10 sm:pt-16">
-      <div className="pointer-events-none absolute left-1/2 top-0 h-[260px] w-[320px] -translate-x-1/2 rounded-full bg-d-gold/[0.04] blur-3xl [.light_&]:bg-l-gold/[0.06] sm:h-[360px] sm:w-[560px]" />
+    <section className="hero-field relative overflow-hidden px-4 pb-10 pt-12 sm:px-6 sm:pb-16 sm:pt-20">
+      <div className="pointer-events-none absolute inset-0 mashrabiya opacity-40" />
+      <div className="pointer-events-none absolute left-1/2 top-[-180px] h-[520px] w-[520px] -translate-x-1/2 rounded-full border border-d-gold/10 [.light_&]:border-l-gold/10" />
+      <div className="pointer-events-none absolute left-1/2 top-[-115px] h-[390px] w-[390px] -translate-x-1/2 rounded-full border border-d-gold/10 [.light_&]:border-l-gold/10" />
 
-      <div className="relative mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-d-gold/15 to-d-gold/5 text-3xl [.light_&]:from-l-gold/10 [.light_&]:to-l-gold/5 sm:mb-8 sm:h-20 sm:w-20 sm:text-4xl">
-        ☽
-      </div>
+      <div className="relative mx-auto max-w-6xl text-center">
+        <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-d-gold/20 bg-d-gold/[0.06] px-4 py-2 font-body text-[11px] tracking-[0.16em] text-d-gold [.light_&]:border-l-gold/20 [.light_&]:bg-l-gold/[0.06] [.light_&]:text-l-gold">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
+          {lang === "ar" ? "القرآن · التفسير · الحديث · الأذكار" : "QURAN · TAFSIR · HADITH · ADHKAR"}
+        </div>
 
-      <h1 className="relative mb-3 font-display text-4xl font-bold text-d-gold [.light_&]:text-l-gold sm:text-5xl">
-        شفيع
-      </h1>
-      <p className="relative mb-7 max-w-md px-2 font-body text-sm leading-7 text-d-text-dim [.light_&]:text-l-text-dim sm:mb-10 sm:text-base">
-        {lang === "ar"
-          ? "مساعد إسلامي موثوق — ابحث في القرآن، التفسير، الحديث، والأذكار"
-          : "Trusted Islamic Assistant — Search the Quran, Tafsir, Hadith, and Adhkar"}
-      </p>
+        <p className="mb-2 font-display text-xl text-d-gold/70 [.light_&]:text-l-gold/70 sm:text-2xl">
+          {lang === "ar" ? "اسأل، وابحث، وتدبّر" : "Ask, discover, reflect"}
+        </p>
+        <h1 className="hero-wordmark relative mx-auto mb-5 max-w-4xl font-display text-[72px] font-bold leading-none text-d-gold [.light_&]:text-l-gold sm:text-[116px]">
+          شفيع
+        </h1>
+        <p className="relative mx-auto mb-9 max-w-2xl px-2 font-body text-base leading-8 text-d-text-dim [.light_&]:text-l-text-dim sm:mb-12 sm:text-lg">
+          {lang === "ar"
+            ? "مساحة هادئة للمعرفة الإسلامية الموثقة. إجابات واضحة من مصادر محددة، بلا ادّعاء ولا تخمين."
+            : "A calm space for verified Islamic knowledge. Clear answers from defined sources, without invention or guesswork."}
+        </p>
 
-      <form onSubmit={handleSubmit} className="relative w-full max-w-xl" dir={lang === "ar" ? "rtl" : "ltr"}>
+      <form onSubmit={handleSubmit} className="search-shell relative mx-auto w-full max-w-3xl" dir={lang === "ar" ? "rtl" : "ltr"}>
         <input
           value={input}
           onChange={(event) => setInput(event.target.value)}
@@ -52,28 +59,29 @@ export default function HeroSection({ onSearch }: { onSearch: (q: string) => voi
               : "Search for a verse, topic, adhkar, or ask a question..."
           }
           dir="auto"
-          className="w-full rounded-2xl border border-d-border bg-d-surface/60 px-4 py-4 pe-14 font-body text-[16px] leading-6 text-d-text shadow-lg shadow-black/5 outline-none transition-colors placeholder:text-d-text-muted focus:border-d-gold/35 [.light_&]:border-l-border [.light_&]:bg-l-surface/90 [.light_&]:text-l-text [.light_&]:placeholder:text-l-text-muted [.light_&]:focus:border-l-gold/35 sm:px-6"
+          className="w-full rounded-[26px] border border-d-gold/25 bg-d-surface/80 px-5 py-5 pe-20 font-body text-[16px] leading-6 text-d-text shadow-2xl shadow-black/20 outline-none backdrop-blur-xl transition-colors placeholder:text-d-text-muted focus:border-d-gold/55 [.light_&]:border-l-gold/20 [.light_&]:bg-white/90 [.light_&]:text-l-text [.light_&]:placeholder:text-l-text-muted [.light_&]:focus:border-l-gold/45 sm:px-7 sm:py-6 sm:text-lg"
         />
         <button
           type="submit"
           disabled={!input.trim()}
-          className="absolute end-2.5 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-xl bg-d-gold/15 text-lg text-d-gold transition-colors hover:bg-d-gold/25 disabled:opacity-30 [.light_&]:bg-l-gold/10 [.light_&]:text-l-gold [.light_&]:hover:bg-l-gold/20"
+          className="absolute end-2.5 top-1/2 flex h-14 w-14 -translate-y-1/2 items-center justify-center rounded-[20px] bg-d-gold text-xl text-d-bg shadow-lg shadow-d-gold/10 transition-all hover:scale-[1.03] disabled:opacity-30 [.light_&]:bg-l-gold [.light_&]:text-white sm:end-3"
           aria-label={lang === "ar" ? "بحث" : "Search"}
         >
-          ↑
+          {lang === "ar" ? "اسأل" : "Ask"}
         </button>
       </form>
 
-      <div className="relative mt-9 max-w-lg px-2 sm:mt-12">
-        <p className="mb-2 font-body text-[10px] uppercase tracking-[0.2em] text-d-text-muted [.light_&]:text-l-text-muted">
+      <div className="relative mx-auto mt-12 max-w-2xl border-t border-d-gold/15 px-2 pt-9 sm:mt-16">
+        <p className="mb-3 font-body text-[11px] uppercase tracking-[0.28em] text-d-text-muted [.light_&]:text-l-text-muted">
           {lang === "ar" ? "آية اليوم" : "Verse of the Day"}
         </p>
-        <p className="verse-glow font-quran text-xl leading-[2.2] text-d-gold/85 [.light_&]:text-l-gold sm:text-2xl">
+        <p className="verse-glow font-quran text-2xl leading-[2.2] text-d-gold/90 [.light_&]:text-l-gold sm:text-3xl">
           {verse.text}
         </p>
         <p className="mt-2 font-body text-xs text-d-text-muted [.light_&]:text-l-text-muted">
           سورة {verse.surah} — آية {verse.ayah}
         </p>
+      </div>
       </div>
     </section>
   );
