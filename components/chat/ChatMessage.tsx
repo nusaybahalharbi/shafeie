@@ -3,6 +3,7 @@
 import { parseResponse, Segment } from "@/lib/parser";
 import AyahCard from "@/components/cards/AyahCard";
 import DhikrCard from "@/components/cards/DhikrCard";
+import ResponseCard from "@/components/cards/ResponseCard";
 
 export default function ChatMessage({ role, content }: { role: "user" | "assistant"; content: string }) {
   if (role === "user") {
@@ -19,6 +20,7 @@ export default function ChatMessage({ role, content }: { role: "user" | "assista
 
   const segments = parseResponse(content, false);
   let dhikrCount = 0;
+  let responseCount = 0;
 
   return (
     <div className="mb-5 flex gap-2 sm:gap-3">
@@ -34,14 +36,8 @@ export default function ChatMessage({ role, content }: { role: "user" | "assista
           }
 
           const refusal = seg.content.includes("عذراً") || seg.content.includes("I'm sorry") || seg.content.includes("خطأ:");
-
-          return (
-            <div key={index} className={`mb-3 ${refusal ? "rounded-xl border border-red-400/15 bg-red-400/5 px-4 py-3 sm:px-5 sm:py-4" : ""}`}>
-              <p className={`whitespace-pre-wrap break-words font-body text-sm leading-[1.9] ${refusal ? "text-red-300 [.light_&]:text-red-600" : "text-d-text-dim [.light_&]:text-l-text-dim"}`} dir="auto">
-                {seg.content}
-              </p>
-            </div>
-          );
+          responseCount++;
+          return <ResponseCard key={index} content={seg.content} index={responseCount} refusal={refusal} />;
         })}
       </div>
     </div>
