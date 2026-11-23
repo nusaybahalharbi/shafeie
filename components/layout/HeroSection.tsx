@@ -55,10 +55,10 @@ export default function HeroSection({ onSearch }: { onSearch: (q: string) => voi
           onChange={(event) => setInput(event.target.value)}
           placeholder={
             lang === "ar"
-              ? "ابحث عن آية، موضوع، أذكار، أو اسأل سؤالاً..."
+              ? "ابحث عن آية أو موضوع، أو اسأل سؤالاً..."
               : "Search for a verse, topic, adhkar, or ask a question..."
           }
-          dir="auto"
+          dir={lang === "ar" ? "rtl" : "ltr"}
           className={`w-full rounded-[26px] border border-d-gold/25 bg-d-surface/80 py-5 font-body text-[15px] leading-6 text-d-text shadow-2xl shadow-black/20 outline-none backdrop-blur-xl transition-colors placeholder:text-d-text-muted focus:border-d-gold/55 [.light_&]:border-l-gold/20 [.light_&]:bg-white/90 [.light_&]:text-l-text [.light_&]:placeholder:text-l-text-muted [.light_&]:focus:border-l-gold/45 sm:py-6 sm:text-lg ${
             lang === "ar" ? "pl-28 pr-5 sm:pl-32 sm:pr-7" : "pl-5 pr-28 sm:pl-7 sm:pr-32"
           }`}
