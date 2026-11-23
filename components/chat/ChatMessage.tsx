@@ -35,7 +35,7 @@ export default function ChatMessage({ role, content }: { role: "user" | "assista
             return <DhikrCard key={index} fields={seg.fields} index={dhikrCount} />;
           }
 
-          const refusal = seg.content.includes("عذراً") || seg.content.includes("I'm sorry") || seg.content.includes("خطأ:");
+          const refusal = seg.content.includes("[REFUSAL:") || seg.content.includes("عذراً") || seg.content.includes("عذرًا") || seg.content.includes("I'm sorry") || seg.content.includes("خطأ:");
           responseCount++;
           return <ResponseCard key={index} content={seg.content} index={responseCount} refusal={refusal} />;
         })}
