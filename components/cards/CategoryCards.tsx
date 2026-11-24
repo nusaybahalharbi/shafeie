@@ -31,7 +31,8 @@ export default function CategoryCards({ onSelect }: { onSelect: (q: string) => v
           <button
             key={index}
             onClick={() => onSelect(lang === "ar" ? category.query_ar : category.query_en)}
-            className="topic-card group flex min-h-[118px] flex-col items-start justify-between rounded-[24px] border border-d-border bg-d-surface/35 p-4 text-start backdrop-blur-sm transition-all hover:-translate-y-1 hover:border-d-gold/35 hover:bg-d-card/80 [.light_&]:border-l-border [.light_&]:bg-white/65 [.light_&]:hover:border-l-gold/25 sm:min-h-[140px] sm:p-5"
+            style={{ animationDelay: `${index * 55}ms` }}
+            className="topic-card topic-enter group flex min-h-[118px] flex-col items-start justify-between rounded-[24px] border border-d-border bg-d-surface/35 p-4 text-start backdrop-blur-sm transition-all hover:-translate-y-1 hover:border-d-gold/35 hover:bg-d-card/80 [.light_&]:border-l-border [.light_&]:bg-white/65 [.light_&]:hover:border-l-gold/25 sm:min-h-[140px] sm:p-5"
           >
             <span className="flex h-11 w-11 items-center justify-center rounded-full border border-d-gold/20 bg-d-gold/[0.06] font-display text-sm leading-none text-d-gold transition-transform group-hover:scale-105 [.light_&]:border-l-gold/20 [.light_&]:bg-l-gold/[0.06] [.light_&]:text-l-gold sm:h-12 sm:w-12 sm:text-base">
               {category.icon}
