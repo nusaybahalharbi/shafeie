@@ -10,8 +10,9 @@ export default function LoadingSkeleton() {
         <div className="h-4 w-3/4 rounded-lg bg-d-gold-soft [.light_&]:bg-l-gold-soft shimmer-bg" />
         <div className="h-4 w-1/2 rounded-lg bg-d-gold-soft [.light_&]:bg-l-gold-soft shimmer-bg" />
         <div className="h-4 w-2/3 rounded-lg bg-d-gold-soft [.light_&]:bg-l-gold-soft shimmer-bg" />
-        <p className="mt-2 text-xs text-d-text-muted [.light_&]:text-l-text-muted font-body">
+        <p className="mt-2 flex items-center gap-2 text-xs text-d-text-muted [.light_&]:text-l-text-muted font-body">
           {lang === "ar" ? "شفيع يبحث في المصادر الموثقة..." : "Shafee is searching verified sources..."}
+          <span className="thinking-dots" aria-hidden><i /><i /><i /></span>
         </p>
       </div>
     </div>
