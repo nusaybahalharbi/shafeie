@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useApp } from "@/lib/context";
 
 const VERSES_OF_DAY = [
@@ -14,7 +14,21 @@ const VERSES_OF_DAY = [
 export default function HeroSection({ onSearch }: { onSearch: (q: string) => void }) {
   const { lang } = useApp();
   const [input, setInput] = useState("");
-  const [verse] = useState(() => VERSES_OF_DAY[Math.floor(Math.random() * VERSES_OF_DAY.length)]);
+  const [verseIndex, setVerseIndex] = useState(0);
+  const [dayPart, setDayPart] = useState<"morning" | "evening">("evening");
+  const verse = VERSES_OF_DAY[verseIndex];
+
+  useEffect(() => {
+    const hour = new Date().getHours();
+    setDayPart(hour >= 5 && hour < 17 ? "morning" : "evening");
+    setVerseIndex(new Date().getDate() % VERSES_OF_DAY.length);
+
+    const timer = window.setInterval(() => {
+      setVerseIndex((current) => (current + 1) % VERSES_OF_DAY.length);
+    }, 9000);
+
+    return () => window.clearInterval(timer);
+  }, []);
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -28,13 +42,17 @@ export default function HeroSection({ onSearch }: { onSearch: (q: string) => voi
   return (
     <section className="hero-field relative overflow-hidden px-4 pb-10 pt-12 sm:px-6 sm:pb-16 sm:pt-20">
       <div className="pointer-events-none absolute inset-0 mashrabiya opacity-40" />
+      <span className="ambient-orb ambient-orb-one" />
+      <span className="ambient-orb ambient-orb-two" />
       <div className="pointer-events-none absolute left-1/2 top-[-180px] h-[520px] w-[520px] -translate-x-1/2 rounded-full border border-d-gold/10 [.light_&]:border-l-gold/10" />
       <div className="pointer-events-none absolute left-1/2 top-[-115px] h-[390px] w-[390px] -translate-x-1/2 rounded-full border border-d-gold/10 [.light_&]:border-l-gold/10" />
 
       <div className="relative mx-auto max-w-6xl text-center">
         <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-d-gold/20 bg-d-gold/[0.06] px-4 py-2 font-body text-[11px] tracking-[0.16em] text-d-gold [.light_&]:border-l-gold/20 [.light_&]:bg-l-gold/[0.06] [.light_&]:text-l-gold">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
-          {lang === "ar" ? "القرآن · التفسير · الحديث · الأذكار" : "QURAN · TAFSIR · HADITH · ADHKAR"}
+          <span className="live-dot h-1.5 w-1.5 rounded-full bg-emerald-300" />
+          {lang === "ar"
+            ? `${dayPart === "morning" ? "صباح الخير" : "مساء الخير"} · مصادر موثقة`
+            : `${dayPart === "morning" ? "Good morning" : "Good evening"} · verified sources`}
         </div>
 
         <p className="mb-2 font-display text-xl text-d-gold/70 [.light_&]:text-l-gold/70 sm:text-2xl">
@@ -77,7 +95,7 @@ export default function HeroSection({ onSearch }: { onSearch: (q: string) => voi
         <p className="mb-3 font-body text-[11px] uppercase tracking-[0.28em] text-d-text-muted [.light_&]:text-l-text-muted">
           {lang === "ar" ? "آية اليوم" : "Verse of the Day"}
         </p>
-        <p className="verse-glow font-quran text-2xl leading-[2.2] text-d-gold/90 [.light_&]:text-l-gold sm:text-3xl">
+        <p key={verseIndex} className="verse-enter verse-glow font-quran text-2xl leading-[2.2] text-d-gold/90 [.light_&]:text-l-gold sm:text-3xl">
           {verse.text}
         </p>
         <p className="mt-2 font-body text-xs text-d-text-muted [.light_&]:text-l-text-muted">
@@ -88,4 +106,3 @@ export default function HeroSection({ onSearch }: { onSearch: (q: string) => voi
     </section>
   );
 }
-
